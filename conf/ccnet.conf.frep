@@ -1,0 +1,32 @@
+[General]
+ID = {{.Env.CCNET_ID}}
+USER_NAME = seafile
+NAME = seafile
+SERVICE_URL = https://{{.Env.SEAFILE_SERVER_HOSTNAME}}:443
+
+[Client]
+PORT = 13419
+
+[Database]
+ENGINE = mysql
+HOST = {{.Env.MYSQL_HOST}}
+PORT = {{.Env.MYSQL_PORT}}
+USER = {{.Env.CCNET_USER}}
+PASSWD = {{.Env.MYSQL_PASSWORD}}
+DB = {{.Env.CCNET_DB}}
+CONNECTION_CHARSET = utf8
+
+[Client]
+UNIX_SOCKET = /opt/seafile/ccnet.sock
+
+
+{{ $ldap := .Env.SEAFILE_LDAP | default "0" }}
+{{ if eq $ldap "1" }}
+[LDAP]
+HOST = {{.Env.LDAP_HOST}}
+BASE = {{.Env.LDAP_BASE}}
+USER_DN = {{.Env.LDAP_USER_DN}}
+PASSWORD = {{.Env.LDAP_PASSWORD}}
+LOGIN_ATTR = {{.Env.LDAP_LOGIN_ATTR}}
+FILTER = {{.Env.LDAP_FILTER}}
+{{ end }}

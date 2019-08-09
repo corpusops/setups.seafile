@@ -1,0 +1,12 @@
+[fileserver]
+port = 8082
+
+[database]
+type = mysql
+host = {{.Env.MYSQL_HOST}}
+port = {{.Env.MYSQL_PORT}}
+user = {{.Env.SEAFILE_USER}}
+db_name = {{.Env.SEAFILE_DB}}
+password = {{.Env.MYSQL_PASSWORD}}
+connection_charset = utf8
+

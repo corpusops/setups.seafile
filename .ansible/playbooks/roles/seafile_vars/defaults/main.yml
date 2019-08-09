@@ -1,0 +1,175 @@
+---
+coeu_seafile_name: seafileinstance
+cops_seafile_code_dir: "{{playbook_dir}}/../.."
+cops_seafile_project_module_name: "{{cops_seafile_name}}"
+cops_seafile_settings_module: "{{cops_seafile_project_module_name}}.settings.instances.{{cops_seafile_deploy_env}}"
+cops_seafile_deploy_env: "dev"
+cops_seafile_docker_image: "{{cops_seafile_name}}"
+cops_seafile_default_docker_tag: "latest"
+cops_seafile_docker_tag: "{{cops_seafile_default_docker_tag}}"
+cops_seafile_tld_domain: example.com
+cops_seafile_default_gitref: "master"
+cops_seafile_gitref: "{{cops_seafile_default_gitref}}"
+cops_seafile_dir: "/srv/docker/{{cops_seafile_name}}"
+cops_seafile_compose_dir: "{{cops_seafile_dir}}"
+cops_seafile_hostname: "{{cops_seafile_deploy_env}}-{{cops_seafile_name}}.{{cops_seafile_tld_domain}}"
+cops_seafile_alternate_hostnames: ["{{cops_seafile_hostname}}", "www.{{cops_seafile_hostname}}"]
+cops_seafile_gateway: "{{ ansible_default_ipv4.address}}"
+cops_seafile_mysql_image: "corpusops/mariadb:10.1"
+cops_seafile_memcached_image: "corpusops/memcached:1.5"
+cops_seafile_image: "corpusops/seafileltd-seafile-mc:7.0.4"
+cops_seafile_time_zone: "Europe/Paris"
+cops_seafile_composename: "{{cops_seafile_name}}"
+cops_seafile_build_args: "--no-cache --pull"
+# backup could be remove in a-while when we have redeployed it everywhere
+cops_seafile_restarted_services_default: "db setup-services"
+cops_seafile_restarted_services: "{{cops_seafile_restarted_services_default}}"
+cops_seafile_purge_volumes: []
+cops_seafile_sshargs: >-
+  {% set k = hostvars[inventory_hostname].get(
+                'ansible_ssh_private_key_file', '') %}
+  {% if k%}-o IdentityFile={{k}} -o IdentitiesOnly=yes{%endif%}
+  {% if (
+      hostvars[inventory_hostname].ansible_connection|default('ssh')
+     ) not in [ 'smart', 'local'] %}
+  {{ hostvars[inventory_hostname].ssh_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_common_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_extra_args | default('') }}
+  {% endif %}
+cops_seafile_build: false
+cops_seafile_pull: true
+cops_seafile_registries: []
+#- {registry: registry.foo.net, username: foo, password: bar}
+cops_seafile_compose_files: [docker-compose.yml, docker-compose-prod.yml]
+cops_seafile_dc:
+  docker-compose {% for i in cops_seafile_compose_files %} -f {{i}}{% endfor %}
+  -p "{{cops_seafile_composename}}"
+cops_seafile_hosts_whitelist: "{{(
+    [cops_seafile_hostname, '0.0.0.0', '.{0}'.format(cops_seafile_hostname)]+
+    cops_seafile_alternate_hostnames
+  )|join('-|_')}}"
+cops_seafile_docker_env_freeform: |-
+  {{ cops_seafile_docker_env_defaults}}
+  {{ cops_seafile_docker_env_extra}}
+cops_seafile_docker_env_defaults: |-
+  #
+# very small, perfect for testing purpose
+cops_seafile_pull_args: ""
+cops_seafile_db_password: supersecret
+# free form for params inside dockerenv
+cops_seafile_admin_email: "a@foo.com"
+cops_seafile_admin_password: "secret"
+cops_seafile_ccnet_user: ccnet_user
+cops_seafile_seafile_user: seafile_user
+cops_seafile_seahub_user: seahub_user
+cops_seafile_ccnet_db: ccnet
+cops_seafile_seafile_db: seafile
+cops_seafile_seahub_db: seahub
+cops_seafile_mysql_host: db
+cops_seafile_mysql_port: 3306
+cops_seafile_secret_key: wootwoot
+cops_seafile_dotenv: |-
+  APP_TYPE=seafile
+  SECRET_KEY={{cops_seafile_secret_key}}
+  COMPOSE_PROJECT_NAME={{cops_seafile_composename}}
+  CONTROL_COMPOSE_FILES={{cops_seafile_compose_files|join(' ')}}
+  CI_COMMIT_SHA={{cops_seafile_gitref}}
+  SEAFILE_NAME={{ cops_seafile_name }}
+  SEAFILE_IMAGE={{ cops_seafile_docker_image }}
+  SEAFILE_IMAGE_VERSION={{cops_seafile_docker_tag}}
+  SEAFILE_ADMIN_EMAIL={{cops_seafile_admin_email}}
+  SEAFILE_ADMIN_PASSWORD={{cops_seafile_admin_password}}
+  SEAFILE_SERVER_HOSTNAME={{cops_seafile_hostname}}
+  MYSQL_ROOT_PASSWORD={{cops_seafile_db_password}}
+  MYSQL_PWD={{cops_seafile_db_password}}
+  MYSQL_PASSWORD={{cops_seafile_db_password}}
+  DB_ROOT_PASSWD={{cops_seafile_db_password}}
+  MYSQL_LOG_CONSOLE=true
+  MYSQL_HOST={{cops_seafile_mysql_host}}
+  DB_HOST={{cops_seafile_mysql_host}}
+  MYSQL_PORT={{cops_seafile_mysql_port}}
+  MYSQL_STARTUP_TIMEOUT={{cops_seafile_mysql_startup_timeout}}
+  CCNET_USER={{cops_seafile_ccnet_user}}
+  SEAFILE_USER={{cops_seafile_seafile_user}}
+  SEAHUB_USER={{cops_seafile_seahub_user}}
+  CCNET_DB={{cops_seafile_ccnet_db}}
+  SEAFILE_DB={{cops_seafile_seafile_db}}
+  SEAHUB_DB={{cops_seafile_seahub_db}}
+  TIME_ZONE={{cops_seafile_time_zone}}
+  TIMEZONE={{cops_seafile_time_zone}}
+  TZ={{cops_seafile_time_zone}}
+  CCNET_ID={{cops_seafile_ccnet_id}}
+  GUNICORN_WORKERS={{cops_seafile_gunicorn_workers}}
+  GUNICORN_TIMEOUT={{cops_seafile_gunicorn_timeout}}
+  {% if cops_seafile_ldap%}
+  SEAFILE_LDAP=1
+  LDAP_HOST={{cops_seafile_ldap_host}}
+  LDAP_BASE={{cops_seafile_ldap_base}}
+  LDAP_USER_DN={{cops_seafile_ldap_user_dn}}
+  LDAP_PASSWORD={{cops_seafile_ldap_password}}
+  LDAP_LOGIN_ATTR={{cops_seafile_ldap_login_attr}}
+  LDAP_FILTER={{cops_seafile_ldap_filter}}
+  {% endif %}
+  CLOUD_MODE=True
+  ENABLE_SIGNUP=True
+  ACTIVATE_AFTER_REGISTRATION=False
+  SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER=True
+  SEND_EMAIL_ON_RESETTING_USER_PASSWD=True
+  LOGIN_ATTEMPT_LIMIT=30000
+  SESSION_EXPIRE_AT_BROWSER_CLOSE=False
+  LANGUAGE_CODE=fr
+  DATE_FORMAT=iso-8601
+  DEFAULT_FROM_EMAIL={{cops_seafile_default_from_email}}
+  EMAIL_HOST={{cops_seafile_email_host}}
+  EMAIL_PORT={{cops_seafile_email_port}}
+  EMAIL_HOST_USER={{cops_seafile_email_user}}
+  EMAIL_HOST_PASSWORD={{cops_seafile_email_password}}
+  EMAIL_USE_TLS={{cops_seafile_use_tls}}
+  SEAFILE_NAME={{cops_seafile_seafile_name}}
+  SEAFILE_TITLE={{cops_seafile_seafile_title}}
+cops_seafile_seafile_name: "Seafile"
+cops_seafile_seafile_title: "Private Seafile"
+cops_seafile_email_host: "localost"
+cops_seafile_email_port: "25"
+cops_seafile_email_user: ""
+cops_seafile_email_password: ""
+cops_seafile_use_tls: "False"
+cops_seafile_default_from_email: "Seafile <foo@localhost>"
+cops_seafile_ldap: false
+cops_seafile_ldap_host: ldap://ldap.foo.com
+cops_seafile_ldap_base: dc=foo
+cops_seafile_ldap_user_dn: ou=User,dc=foo
+cops_seafile_ldap_password: xxx
+cops_seafile_ldap_login_attr: mail
+cops_seafile_ldap_filter: "memberof=cn=people,dc=foo"
+cops_seafile_ccnet_id: "{{'{0}{1}'.format(
+    ansible_fqdn, cops_seafile_dir)|hash('sha1')}}"
+cops_seafile_gunicorn_workers: 5
+cops_seafile_gunicorn_timeout: 1200
+cops_seafile_mysql_startup_timeout: 45s
+cops_seafile_cache_backend_expiry: 43200
+cops_seafile_dotenv_extra: ""
+# free form for params inside dockerenv
+cops_seafile_docker_env_extra: ""
+# free form for params inside local.py
+cops_seafile_localpy_extra: ""
+# Normally playbook is in ./.ansible/playbooks
+cops_seafile_group: prod
+cops_seafile_traefik_extra: ""
+cops_seafile_code_rsync_opts: [
+    "-azv",
+    # include deploy projects base code
+    "--include", "local/*-deploy",
+    "--exclude", ".ansible",
+    "--exclude", "local/*",
+    "--exclude", ".env",
+    "--exclude", "docker.env"]
+olddata:
+  dvolume: /var/lib/docker/volumes/seafile-seafile-data/_data/seafile
+  sync:
+  - orig: /srv/projects/seafile/data/seahub-data/
+    dest: /var/lib/docker/volumes/seafile-seafile-data/_data/seafile/seahub-data/
+  - orig: /srv/projects/seafile/data/seafile-data/
+    dest: /var/lib/docker/volumes/seafile-seafile-data/_data/seafile/seafile-data/
+

@@ -1,0 +1,5 @@
+- shell: |-
+    set -ex
+    cd {{cops_seafile_dir}}
+    {{cops_seafile_dc}} stop --no-deps seafile || /bin/true
+    {{cops_seafile_dc}} up -d --force-recreate --no-deps seafile

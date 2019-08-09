@@ -1,0 +1,64 @@
+---
+- file:
+    state: directory
+    mode: "2751"
+    path: "{{item}}"
+  with_items:
+  - "{{cops_seafile_dir}}"
+- name: Synchronise files inside the environment (deleguation)
+  delegate_to: "localhost"
+  synchronize:
+    compress: false
+    ssh_args: "{{cops_seafile_sshargs}}"
+    src: "{{cops_seafile_code_dir}}"
+    dest: "{{cops_seafile_dir}}/"
+    rsync_opts: "{{cops_seafile_code_rsync_opts}}"
+    set_remote_user: "no"
+    #update_opts: '--recursive'
+- template:
+    src: "docker.env"
+    dest: "{{cops_seafile_compose_dir}}/docker.env"
+    mode: "0640"
+    trim_blocks: false
+- blockinfile:
+    create: true
+    path: "{{cops_seafile_compose_dir}}/.env"
+    content: |-
+      {{cops_seafile_dotenv}}
+      {{cops_seafile_dotenv_extra}}
+    marker: "# ANSIBLE MANAGED BLOCK :: deploy commit :: {mark}"
+- name: Create directories
+  file:
+    path: "{{cops_seafile_compose_dir}}/{{ item.path }}"
+    state: directory
+    mode: '{{ item.mode }}'
+  with_filetree: "{{playbook_dir}}/../../setup/"
+  when: item.state == 'directory'
+- name: Template files
+  template:
+    src: '{{ item.src }}'
+    dest: "{{cops_seafile_compose_dir}}/{{ item.path }}"
+    mode: '{{ item.mode }}'
+    trim_blocks: false
+  with_filetree: "{{playbook_dir}}/../../setup/"
+  when: item.state == 'file'
+- include_tasks: docker_login.yml
+  with_items: "{{cops_seafile_registries}}"
+- shell: |
+    set -ex
+    cd "{{cops_seafile_compose_dir}}"
+    : {{cops_seafile_dc}} build {{cops_seafile_build_args}}
+  when:
+  - "cops_seafile_build|copsf_asbool"
+  - "cops_seafile_build_args|copsf_asbool"
+# ensure all images are (re) pulled
+- shell: |
+    set -ex
+    cd "{{cops_seafile_compose_dir}}"
+    {{cops_seafile_dc}} pull {{cops_seafile_pull_args}}
+  retries: 5
+  delay: 10
+  when:
+  - "cops_seafile_pull|copsf_asbool"
+- include_tasks: service.yml
+  tags: [seafile_service, service]

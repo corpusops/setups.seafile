@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  db:
+    restart: unless-stopped
+  memcached:
+    restart: unless-stopped
+  setup-services:
+    restart: unless-stopped
+  seafile:
+    restart: unless-stopped
+  traefik:
+    restart: unless-stopped
+volumes: {}

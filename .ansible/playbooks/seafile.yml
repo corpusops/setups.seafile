@@ -1,0 +1,10 @@
+---
+# APP
+- hosts: "{{seafile_servers|default('all')}}"
+  roles: [corpusops.roles/ansible_plugins]
+  tasks:
+  - when: ["cops_seafile_lifecycle_app|default(true)"]
+    tags: ["cops_seafile_lifecycle_app"]
+    block:
+    - include_role: {name: seafile_vars, public: true, allow_duplicates: false}
+    - include_role: {name: seafile,      public: true, allow_duplicates: false}

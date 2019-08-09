@@ -1,0 +1,10 @@
+- include_tasks: sync.yml
+  with_items: "{{olddata.sync}}"
+- shell: |-
+    set -ex
+    cd {{olddata.dvolume}}
+    while read f;do chmod 0755 "$f";done < \
+      <(find sea*data -type d -not -perm 0755)
+    while read f;do chmod 0644 "$f";done < \
+      <(find sea*data -type f -not -perm 0644)
+  args: {executable: /bin/bash}

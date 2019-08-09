@@ -1,0 +1,3 @@
+---
+- import_playbook: seafile.yml
+  tags: [play_seafile_app]

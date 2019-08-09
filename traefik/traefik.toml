@@ -1,0 +1,33 @@
+debug = false
+logLevel = "INFO"
+defaultEntryPoints = ["http"]
+entryPoints = { http = {address = ":80"}}
+# filePath = "log/traefik.log" / format: "common/json"
+{{ $accesslogpath := .Env.TRAEFIK_ACCESS_LOG_PATH | default "os.Stdout" }}
+{{ $logpath       := .Env.TRAEFIK_LOG_PATH | default "/logs/traefik.log" }}
+{{ $nossl := .Env.NO_SSL | default "0" }}
+traefikLog = { filePath = "{{$logpath}}", format = "common" }
+accessLog = { filePath = "{{$accesslogpath}}", format = "common" }
+api = { entryPoint = "traefik", dashboard = true }
+ping = { entryPoint = "traefik", dashboard = true }
+rest = { entryPoint = "traefik", dashboard = true }
+
+
+[file]
+[frontends.seafile]
+  backend = "seafile"
+  passHostHeader = true
+[frontends.seafile.headers]
+	SSLRedirect = true
+{{ if ne $nossl "1" }}
+[frontends.seafile.headers.SSLProxyHeaders]
+  X-Forwarded-Proto = "https"
+{{ end }}
+[frontends.seafile.routes.seafile]
+  rule = "Host:{{.Env.SEAFILE_SERVER_HOSTNAME}};PathPrefix:/"
+
+[backends.seafile.servers.seafile]
+  url = "http://seafile:80"
+[backends.seafile]
+  healthcheck = { path = "/", interval = "15s" }
+[backends.seafile.loadbalancer.stickiness]

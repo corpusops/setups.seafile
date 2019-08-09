@@ -1,0 +1,55 @@
+# -*- coding: utf-8 -*-
+SECRET_KEY = "{{.Env.SECRET_KEY}}"
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '{{.Env.SEAHUB_DB}}',
+        'USER': '{{.Env.SEAHUB_USER}}',
+        'PASSWORD': '{{.Env.MYSQL_PASSWORD}}',
+        'HOST': '{{.Env.MYSQL_HOST}}',
+        'PORT': '{{.Env.MYSQL_PORT}}'
+    }
+}
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
+        'LOCATION': 'memcached:11211',
+    },
+    'locmem': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+}
+COMPRESS_CACHE_BACKEND = 'locmem'
+TIME_ZONE = '{{.Env.TIME_ZONE}}'
+FILE_SERVER_ROOT = "https://{{.Env.SEAFILE_SERVER_HOSTNAME}}/seafhttp"
+#SITE_BASE = "https://{{.Env.SEAFILE_SERVER_HOSTNAME}}"
+#SERVICE_URL = "https://{{.Env.SEAFILE_SERVER_HOSTNAME}}"
+#MEDIA_URL = "https://{{.Env.SEAFILE_SERVER_HOSTNAME}}/media/"
+#COMPRESS_URL = MEDIA_URL
+#STATIC_URL = MEDIA_URL + 'assets/'
+SITE_NAME = "{{.Env.SEAFILE_NAME}}"
+SITE_TITLE = "{{.Env.SEAFILE_TITLE}}"
+
+CLOUD_MODE = {{.Env.CLOUD_MODE}}
+ENABLE_SIGNUP = {{.Env.ENABLE_SIGNUP}}
+ACTIVATE_AFTER_REGISTRATION = {{.Env.ACTIVATE_AFTER_REGISTRATION}}
+SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER = {{.Env.SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER}}
+SEND_EMAIL_ON_RESETTING_USER_PASSWD = {{.Env.SEND_EMAIL_ON_RESETTING_USER_PASSWD}}
+LOGIN_ATTEMPT_LIMIT = {{.Env.LOGIN_ATTEMPT_LIMIT}}
+SESSION_EXPIRE_AT_BROWSER_CLOSE = {{.Env.SESSION_EXPIRE_AT_BROWSER_CLOSE}}
+DEFAULT_FROM_EMAIL = "{{.Env.DEFAULT_FROM_EMAIL}}"
+LANGUAGE_CODE = "{{.Env.LANGUAGE_CODE}}"
+DATE_FORMAT = "{{.Env.DATE_FORMAT}}"
+USE_X_FORWARDED_HOST = True
+ALLOWED_HOSTS = ["{{.Env.SEAFILE_SERVER_HOSTNAME"]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+EMAIL_HOST                 = "{{.Env.EMAIL_HOST}}"
+EMAIL_PORT                 = {{.Env.EMAIL_PORT}}
+EMAIL_HOST_USER            = "{{.Env.EMAIL_HOST_USER}}"
+EMAIL_HOST_PASSWORD        = "{{.Env.EMAIL_HOST_PASSWORD}}"
+EMAIL_USE_TLS              = {{.Env.EMAIL_USE_TLS}}
+

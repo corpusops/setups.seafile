@@ -1,0 +1,94 @@
+version: '3.7'
+x-images:
+  env: &env
+    env_file: [.env, docker.env]
+    environment: {"COMPOSE_PROJECT_NAME": "$COMPOSE_PROJECT_NAME"}
+services:
+  db:
+    <<: [ *env ]
+    image: "{{cops_seafile_mysql_image}}"
+    container_name: seafile-mysql
+    volumes:
+    - seafile-db:/var/lib/mysql
+  setup-services:
+    <<: [ *env ]
+    image: "{{cops_seafile_mysql_image}}"
+    depends_on: [db, memcached]
+    entrypoint:
+    - /bin/sh
+    - '-c'
+    - |-
+      set -ex
+      MYSQL_STARTUP_TIMEOUT=$${MYSQL_STARTUP_TIMEOUT:-45s}
+      flag=/started_$$(echo $$MYSQL_DB|sed -re "s![/:]!__!g")
+      if [ -e "$$flag" ];then rm -f "$$flag";fi
+      echo "Try connection to mysql: $$MYSQL_DB & wait for db init" >&2 \
+      && ( while true;do if ( echo "select 1" | mysql );then touch $$flag && break;fi;done )&
+      set -x \
+      && dockerize -wait file://$$flag -timeout $${MYSQL_STARTUP_TIMEOUT} \
+      && : create all needed databases \
+      && for i in $$SEAFILE_DB $$SEAHUB_DB $$CCNET_DB;do \
+        if ! ( echo "select 1" | mysql $$i );then \
+          echo "Creating db $$i"; \
+          mysql -e "CREATE DATABASE $$i"; \
+        fi; \
+      done \
+      && set +x \
+      && mysql -e \
+          "GRANT ALL PRIVILEGES ON $$SEAFILE_DB.* \
+              TO '$$SEAFILE_USER'@'%' \
+              IDENTIFIED BY '$$MYSQL_PASSWORD';FLUSH PRIVILEGES;" \
+      && mysql -e \
+          "GRANT ALL PRIVILEGES ON $$SEAHUB_DB.* \
+              TO '$$SEAHUB_USER'@'%' \
+              IDENTIFIED BY '$$MYSQL_PASSWORD';FLUSH PRIVILEGES;" \
+      && mysql -e \
+          "GRANT ALL PRIVILEGES ON $CCNET_DB.* \
+              TO '$$CCNET_USER'@'%' \
+              IDENTIFIED BY '$$MYSQL_PASSWORD';FLUSH PRIVILEGES;" \
+      && set -x \
+      && while true;do printf "HTTP/1.1 200 OK\n\nstarted"| ( nc -l -p 80 || /bin/true);done
+  memcached:
+    image: "{{cops_seafile_memcached_image}}"
+    container_name: seafile-memcached
+    entrypoint: memcached -m 256
+  seafile:
+    <<: [ *env ]
+    image: "{{cops_seafile_image}}"
+    command:
+    - /bin/bash
+    - '-exc'
+    - >-
+      : \
+      && MYSQL_STARTUP_TIMEOUT=$${MYSQL_STARTUP_TIMEOUT:-45s}
+      && dockerize -wait http://setup-services -timeout $${MYSQL_STARTUP_TIMEOUT}
+      && while read f;do
+      echo "Configuring $$f" >&2
+      && frep $$f:/shared/seafile/conf/$$(basename $$f .frep) --overwrite;done < <(
+      find /shared/seafile/conftemplates/ -name *frep)
+      && /sbin/my_init -- /scripts/start.py
+    volumes:
+    - seafile-data:/shared
+    - ./conf:/shared/seafile/conftemplates
+    depends_on: [setup-services]
+  traefik:
+    <<: [ *env ]
+    image: corpusops/traefik:alpine
+    entrypoint:
+    - /bin/sh
+    - "-exc"
+    - |-
+      frep /staticconf/traefik.toml:/traefik.toml --overwrite
+      traefik \
+       --sendanonymoususage=false --defaultentrypoints=http \
+       --accesslog --accesslog.bufferingsize=10 --loglevel=info \
+       --rest --api --web --web.metrics -c /traefik.toml
+    volumes:
+    - ./traefik:/staticconf
+    ports:
+    - "${SEAFILE_HTTP_PORT:-80}:80"
+    - "${SEAFILE_HTTPS_PORT:-443}:443"
+volumes:
+  seafile-db: {name: "${COMPOSE_PROJECT_NAME}-seafile-db", external: false}
+  seafile-data: {name: "${COMPOSE_PROJECT_NAME}-seafile-data", external: false}
+
