@@ -17,17 +17,37 @@ rest = { entryPoint = "traefik", dashboard = true }
 [frontends.seafile]
   backend = "seafile"
   passHostHeader = true
-[frontends.seafile.headers]
-	SSLRedirect = true
 {{ if ne $nossl "1" }}
+[frontends.seafile.headers]
+  SSLRedirect = true
 [frontends.seafile.headers.SSLProxyHeaders]
   X-Forwarded-Proto = "https"
 {{ end }}
 [frontends.seafile.routes.seafile]
   rule = "Host:{{.Env.SEAFILE_SERVER_HOSTNAME}};PathPrefix:/"
-
 [backends.seafile.servers.seafile]
   url = "http://seafile:80"
 [backends.seafile]
   healthcheck = { path = "/", interval = "15s" }
 [backends.seafile.loadbalancer.stickiness]
+
+
+{{ $onlyoffice := .Env.ONLYOFFICE_HOSTNAME | default "novalue" }}
+{{ if not (($onlyoffice | eq "") | or ($onlyoffice | eq "novalue"))}}
+[frontends.onlyoffice]
+  backend = "onlyoffice"
+  passHostHeader = true
+{{ if ne $nossl "1" }}
+[frontends.onlyoffice.headers]
+  SSLRedirect = true
+[frontends.onlyoffice.headers.SSLProxyHeaders]
+  X-Forwarded-Proto = "https"
+{{ end }}
+[frontends.onlyoffice.routes.onlyoffice]
+  rule = "Host:{{$onlyoffice}};PathPrefix:/"
+[backends.onlyoffice.servers.onlyoffice]
+  url = "http://onlyoffice-documentserver:80"
+[backends.onlyoffice]
+  healthcheck = { path = "/", interval = "15s" }
+[backends.onlyoffice.loadbalancer.stickiness]
+{{ end }}

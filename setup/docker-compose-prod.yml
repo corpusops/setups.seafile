@@ -10,4 +10,18 @@ services:
     restart: unless-stopped
   traefik:
     restart: unless-stopped
+ 
+#
+# onlyoffice
+#
+  onlyoffice-documentserver-data:
+    restart: unless-stopped
+  onlyoffice-documentserver:
+    restart: unless-stopped
+  onlyoffice-redis:
+    restart: unless-stopped
+  onlyoffice-rabbitmq:
+    restart: unless-stopped
+  onlyoffice-postgresql:
+    restart: unless-stopped
 volumes: {}

@@ -3,6 +3,20 @@ x-images:
   env: &env
     env_file: [.env, docker.env]
     environment: {"COMPOSE_PROJECT_NAME": "$COMPOSE_PROJECT_NAME"}
+x-onlyoffice-base: &onlyofficebase
+  <<: [ *env ]
+x-onlyoffice: &onlyoffice
+  <<: [ *onlyofficebase ]
+  image: "onlyoffice/documentserver:latest"
+  stdin_open: true
+  volumes:
+     - onlyoffice-conf:/etc/onlyoffice
+     - onlyoffice-data:/var/www/onlyoffice/Data
+     - onlyoffice-logs:/var/log/onlyoffice
+     - onlyoffice-lib:/var/lib/onlyoffice
+     - onlyoffice-cache:/var/lib/onlyoffice/documentserver/App_Data/cache/files
+     - onlyoffice-samples:/var/www/onlyoffice/documentserver-example/public/files
+     - onlyoffice-fonts:/usr/share/fonts
 services:
   db:
     <<: [ *env ]
@@ -88,7 +102,71 @@ services:
     ports:
     - "${SEAFILE_HTTP_PORT:-80}:80"
     - "${SEAFILE_HTTPS_PORT:-443}:443"
+
+#
+# onlyoffice
+#
+  onlyoffice-documentserver-data:
+    <<: [ *onlyoffice ]
+    container_name: onlyoffice-documentserver-data
+    image: onlyoffice/documentserver:latest
+    environment:
+      - ONLYOFFICE_DATA_CONTAINER=true
+      - POSTGRESQL_SERVER_HOST=onlyoffice-postgresql
+      - POSTGRESQL_SERVER_PORT=5432
+      - POSTGRESQL_SERVER_DB_NAME=onlyoffice
+      - POSTGRESQL_SERVER_USER=onlyoffice
+      - AMQP_SERVER_URL=amqp://guest:guest@onlyoffice-rabbitmq
+      - REDIS_SERVER_HOST=onlyoffice-redis
+      - REDIS_SERVER_PORT=6379
+
+  onlyoffice-documentserver:
+    <<: [ *onlyoffice ]
+    environment:
+      - ONLYOFFICE_DATA_CONTAINER_HOST=onlyoffice-documentserver-data
+    expose:
+      - '80'
+    depends_on:
+    - onlyoffice-documentserver-data
+    - onlyoffice-postgresql
+    - onlyoffice-redis
+    - onlyoffice-rabbitmq
+
+  onlyoffice-redis:
+    <<: [ *onlyofficebase ]
+    container_name: onlyoffice-redis
+    image: corpusops/redis:latest
+    expose:
+      - '6379'
+
+  onlyoffice-rabbitmq:
+    <<: [ *onlyofficebase ]
+    container_name: onlyoffice-rabbitmq
+    image: corpusops/rabbitmq:3.5
+    expose:
+      - '5672'
+
+  onlyoffice-postgresql:
+    <<: [ *onlyofficebase ]
+    container_name: onlyoffice-postgresql
+    image: corpusops/postgres:12
+    environment:
+      - POSTGRES_DB=onlyoffice
+      - POSTGRES_USER=onlyoffice
+    expose:
+      - '5432'
+    volumes:
+      - onlyoffice-pgsql:/var/lib/postgresql
+
 volumes:
   seafile-db: {name: "${COMPOSE_PROJECT_NAME}-seafile-db", external: false}
   seafile-data: {name: "${COMPOSE_PROJECT_NAME}-seafile-data", external: false}
-
+  # onlyoffice
+  onlyoffice-pgsql:
+  onlyoffice-data:
+  onlyoffice-logs:
+  onlyoffice-cache:
+  onlyoffice-conf:
+  onlyoffice-fonts:
+  onlyoffice-samples:
+  onlyoffice-lib:

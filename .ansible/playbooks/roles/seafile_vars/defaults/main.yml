@@ -12,6 +12,10 @@ cops_seafile_default_gitref: "master"
 cops_seafile_gitref: "{{cops_seafile_default_gitref}}"
 cops_seafile_dir: "/srv/docker/{{cops_seafile_name}}"
 cops_seafile_compose_dir: "{{cops_seafile_dir}}"
+
+# set to a domain to activate onlyoffice
+cops_seafile_onlyoffice_hostname: ""
+cops_seafile_onlyoffice_scheme: "https"
 cops_seafile_hostname: "{{cops_seafile_deploy_env}}-{{cops_seafile_name}}.{{cops_seafile_tld_domain}}"
 cops_seafile_alternate_hostnames: ["{{cops_seafile_hostname}}", "www.{{cops_seafile_hostname}}"]
 cops_seafile_gateway: "{{ ansible_default_ipv4.address}}"
@@ -128,6 +132,8 @@ cops_seafile_dotenv: |-
   EMAIL_USE_TLS={{cops_seafile_use_tls}}
   SEAFILE_NAME={{cops_seafile_seafile_name}}
   SEAFILE_TITLE={{cops_seafile_seafile_title}}
+  ONLYOFFICE_HOSTNAME={{cops_seafile_onlyoffice_hostname}}
+  ONLYOFFICE_SCHEME={{cops_seafile_onlyoffice_scheme}}
 cops_seafile_seafile_name: "Seafile"
 cops_seafile_seafile_title: "Private Seafile"
 cops_seafile_email_host: "localost"
