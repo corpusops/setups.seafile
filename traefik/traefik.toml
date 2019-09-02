@@ -1,6 +1,7 @@
 debug = false
 logLevel = "INFO"
 defaultEntryPoints = ["http"]
+InsecureSkipVerify = true
 entryPoints = { http = {address = ":80"}}
 # filePath = "log/traefik.log" / format: "common/json"
 {{ $accesslogpath := .Env.TRAEFIK_ACCESS_LOG_PATH | default "os.Stdout" }}
@@ -50,4 +51,24 @@ rest = { entryPoint = "traefik", dashboard = true }
 [backends.onlyoffice]
   healthcheck = { path = "/", interval = "15s" }
 [backends.onlyoffice.loadbalancer.stickiness]
+{{ end }}
+
+{{ $collabora := .Env.COLLABORA_HOSTNAME | default "novalue" }}
+{{ if not (($collabora | eq "") | or ($collabora | eq "novalue"))}}
+[frontends.collabora]
+  backend = "collabora"
+  passHostHeader = true
+{{ if ne $nossl "1" }}
+[frontends.collabora.headers]
+  SSLRedirect = true
+[frontends.collabora.headers.SSLProxyHeaders]
+  X-Forwarded-Proto = "https"
+{{ end }}
+[frontends.collabora.routes.collabora]
+  rule = "Host:{{$collabora}};PathPrefix:/"
+[backends.collabora.servers.collabora]
+  url = "https://collabora:9980"
+[backends.collabora]
+  healthcheck = { path = "/", interval = "15s" }
+[backends.collabora.loadbalancer.stickiness]
 {{ end }}

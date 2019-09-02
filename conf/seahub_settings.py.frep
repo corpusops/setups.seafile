@@ -63,3 +63,15 @@ ONLYOFFICE_APIJS_URL = '{{$onlyofficescheme}}://{{$onlyoffice}}/web-apps/apps/ap
 ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
 ONLYOFFICE_EDIT_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
 {{ end }}
+
+{{ $collabora := .Env.COLLABORA_HOSTNAME | default "novalue" }}
+{{ $collaborascheme := .Env.COLLABORA_SCHEME | default "https" }}
+{{ if not (($collabora | eq "") | or ($collabora | eq "novalue"))}}
+OFFICE_SERVER_TYPE = 'CollaboraOffice'
+ENABLE_OFFICE_WEB_APP = True
+OFFICE_WEB_APP_BASE_URL = '{{$collaborascheme}}://{{$collabora}}/hosting/discovery'
+WOPI_ACCESS_TOKEN_EXPIRATION = 30 * 60  # seconds
+ENABLE_OFFICE_WEB_APP_EDIT = True
+OFFICE_WEB_APP_FILE_EXTENSION = ('odp', 'ods', 'odt', 'xls', 'xlsb', 'xlsm', 'xlsx','ppsx', 'ppt', 'pptm', 'pptx', 'doc', 'docm', 'docx')
+OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ('odp', 'ods', 'odt', 'xls', 'xlsb', 'xlsm', 'xlsx','ppsx', 'ppt', 'pptm', 'pptx', 'doc', 'docm', 'docx')
+{{ end }}

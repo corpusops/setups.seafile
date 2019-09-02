@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
   traefik:
     restart: unless-stopped
- 
+{% if cops_seafile_onlyoffice_hostname %}
 #
 # onlyoffice
 #
@@ -24,4 +24,9 @@ services:
     restart: unless-stopped
   onlyoffice-postgresql:
     restart: unless-stopped
-volumes: {}
+{% endif %}
+{% if cops_seafile_collabora_hostname %}
+  # collabora
+  collabora:
+    restart: unless-stopped
+{% endif %}

@@ -13,6 +13,12 @@ cops_seafile_gitref: "{{cops_seafile_default_gitref}}"
 cops_seafile_dir: "/srv/docker/{{cops_seafile_name}}"
 cops_seafile_compose_dir: "{{cops_seafile_dir}}"
 
+# set to a domain to activate collabora
+cops_seafile_collabora_hostname: ""
+cops_seafile_collabora_domains: "({{
+  cops_seafile_collabora_hostname.replace('.', '\\.')}}|{{
+  cops_seafile_hostname          .replace('.', '\\.')}})"
+cops_seafile_collabora_scheme: "https"
 # set to a domain to activate onlyoffice
 cops_seafile_onlyoffice_hostname: ""
 cops_seafile_onlyoffice_scheme: "https"
@@ -132,8 +138,22 @@ cops_seafile_dotenv: |-
   EMAIL_USE_TLS={{cops_seafile_use_tls}}
   SEAFILE_NAME={{cops_seafile_seafile_name}}
   SEAFILE_TITLE={{cops_seafile_seafile_title}}
+  COLLABORA_HOSTNAME={{cops_seafile_collabora_hostname}}
+  COLLABORA_DOMAINS={{cops_seafile_collabora_domains}}
+  COLLABORA_SCHEME={{cops_seafile_collabora_scheme}}
   ONLYOFFICE_HOSTNAME={{cops_seafile_onlyoffice_hostname}}
   ONLYOFFICE_SCHEME={{cops_seafile_onlyoffice_scheme}}
+  COLLABORA_USERNAME={{cops_seafile_collabora_username}}
+  COLLABORA_PASSWORD={{cops_seafile_collabora_password}}
+  COLLABORA_DONT_GEN_SSL_CERT={{cops_seafile_collabora_dont_gen_ssl_cert}}
+  COLLABORA_DICTS={{cops_seafile_collabora_dicts}}
+cops_seafile_collabora_dont_gen_ssl_cert: "set"
+# cops_seafile_collabora_dont_gen_ssl_cert: "1"
+cops_seafile_collabora_username: admin
+cops_seafile_collabora_password: secretT8zdORpmJQBxs7P
+cops_seafile_collabora_dicts: "de_DE en_GB en_US es_ES fr_FR"
+# default
+# cops_seafile_collabora_dicts: "de_DE en_GB en_US es_ES fr_FR it nl pt_BR pt_PT ru"
 cops_seafile_seafile_name: "Seafile"
 cops_seafile_seafile_title: "Private Seafile"
 cops_seafile_email_host: "localost"

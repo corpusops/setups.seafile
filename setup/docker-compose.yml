@@ -16,7 +16,7 @@ x-onlyoffice: &onlyoffice
      - onlyoffice-lib:/var/lib/onlyoffice
      - onlyoffice-cache:/var/lib/onlyoffice/documentserver/App_Data/cache/files
      - onlyoffice-samples:/var/www/onlyoffice/documentserver-example/public/files
-     - onlyoffice-fonts:/usr/share/fonts
+     - fonts:/usr/share/fonts/custom
 services:
   db:
     <<: [ *env ]
@@ -103,6 +103,8 @@ services:
     - "${SEAFILE_HTTP_PORT:-80}:80"
     - "${SEAFILE_HTTPS_PORT:-443}:443"
 
+
+{% if cops_seafile_onlyoffice_hostname %}
 #
 # onlyoffice
 #
@@ -157,16 +159,47 @@ services:
       - '5432'
     volumes:
       - onlyoffice-pgsql:/var/lib/postgresql
+{% endif %}
+{% if cops_seafile_collabora_hostname %}
+  # collabora
+  collabora:
+    <<: [ *env ]
+    image: collabora/code
+    entrypoint:
+    - /bin/bash
+    - '-ec'
+    - |-
+      export password="$$COLLABORA_PASSWORD"
+      set -x
+      export username="$$COLLABORA_USERNAME"
+      export DONT_GEN_SSL_CERT="$$COLLABORA_DONT_GEN_SSL_CERT"
+      export server_name="$$COLLABORA_HOSTNAME"
+      export domain="$$COLLABORA_DOMAINS"
+      export SLEEPFORDEBUGGER="0"
+      export dictionaries="$$COLLABORA_DICTS"
+      export extra_params="$${extra_params-} --o:net.frame_ancestors=$$SEAFILE_SERVER_HOSTNAME"
+      if [ "x$$DONT_GEN_SSL_CERT" != "x" ];then
+        export extra_params="$${extra_params-} --o:ssl.enable=false --o:ssl.termination=true"
+      fi
+      exec bash start-libreoffice.sh
+    cap_add: [MKNOD, SYS_CHROOT, FOWNER]
+    volumes:
+    - fonts:/usr/share/fonts/custom
+{% endif %}
 
 volumes:
   seafile-db: {name: "${COMPOSE_PROJECT_NAME}-seafile-db", external: false}
   seafile-data: {name: "${COMPOSE_PROJECT_NAME}-seafile-data", external: false}
+{% if cops_seafile_onlyoffice_hostname %}
   # onlyoffice
   onlyoffice-pgsql:
   onlyoffice-data:
   onlyoffice-logs:
   onlyoffice-cache:
   onlyoffice-conf:
-  onlyoffice-fonts:
   onlyoffice-samples:
   onlyoffice-lib:
+{% endif %}
+{% if cops_seafile_collabora_hostname %}
+  # collabora
+{% endif %}
