@@ -1,6 +1,6 @@
 
 [WEBDAV]
-enabled = false
+enabled = {{ ((.Env.SEAFILE_DAV | default "") | eq "1")|ternary "true" "false" }}
 port = 8080
-fastcgi = false
-share_name = /
+fastcgi = true
+share_name = /seafdav
