@@ -93,7 +93,7 @@ cops_seafile_mysql_port: 3306
 cops_seafile_secret_key: wootwoot
 seafile_disable_register: true
 # deactivated for now as there are bugs with certain files corrupting libraries
-cops_seafile_use_go_fileserver: "false"
+cops_seafile_use_go_fileserver: "true"
 
 cops_seafile_dotenv: |-
   APP_TYPE=seafile
