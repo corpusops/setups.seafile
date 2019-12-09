@@ -188,6 +188,7 @@ services:
 {% endif %}
 
 volumes:
+  fonts:
   seafile-db: {name: "${COMPOSE_PROJECT_NAME}-seafile-db", external: false}
   seafile-data: {name: "${COMPOSE_PROJECT_NAME}-seafile-data", external: false}
 {% if cops_seafile_onlyoffice_hostname %}
