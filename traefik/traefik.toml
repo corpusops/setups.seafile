@@ -67,7 +67,7 @@ rest = { entryPoint = "traefik", dashboard = true }
 [frontends.collabora.routes.collabora]
   rule = "Host:{{$collabora}};PathPrefix:/"
 [backends.collabora.servers.collabora]
-  url = "https://collabora:9980"
+  url = "http://collabora:9980"
 [backends.collabora]
   healthcheck = { path = "/", interval = "15s" }
 [backends.collabora.loadbalancer.stickiness]
