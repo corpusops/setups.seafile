@@ -1,0 +1,4 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+{{ $cron := .Env.SEAHUBSESSIONCLEAN_CRONTAB | default "1 3 * * *" }}
+{{ $cron }} root /bin/bash -ec "cd /opt/seafile/seafile-server-latest && ./seahub.sh python-env seahub/manage.py clearsessions >/dev/null 2>&1"

@@ -80,6 +80,7 @@ services:
       echo "Configuring $$f" >&2
       && frep $$f:/shared/seafile/conf/$$(basename $$f .frep) --overwrite;done < <(
       find /shared/seafile/conftemplates/ -name *frep)
+      && cp /shared/seafile/conf/seahub-crontab /etc/cron.d && chmod 600 /etc/cron.d/* && chown root:root /etc/cron.d/*
       && /sbin/my_init -- /scripts/start.py
     volumes:
     - seafile-data:/shared
