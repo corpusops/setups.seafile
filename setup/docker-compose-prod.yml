@@ -1,4 +1,8 @@
 version: '3.7'
+x-images:
+  env: &env
+    env_file: [.env, docker.env]
+    environment: {"COMPOSE_PROJECT_NAME": "$COMPOSE_PROJECT_NAME"}
 services:
   db:
     restart: unless-stopped
@@ -30,3 +34,13 @@ services:
   collabora:
     restart: unless-stopped
 {% endif %}
+  backup-db:
+    <<: [ *env ]
+    image: "corpusops/dbsmartbackup:mariadb-10.1"
+    depends_on: [db, memcached]
+    volumes:
+    - backupdb-dumps:/var/db_smart_backup/
+    - backupdb-logs:/var/db_smart_backup/logs/
+volumes:
+  backupdb-dumps:
+  backupdb-logs:
