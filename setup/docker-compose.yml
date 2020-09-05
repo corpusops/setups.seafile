@@ -9,19 +9,20 @@ x-onlyoffice: &onlyoffice
   <<: [ *onlyofficebase ]
   image: "onlyoffice/documentserver:latest"
   stdin_open: true
+  env_file: [.env, docker.env, onlyoffice.env]
   volumes:
-     - onlyoffice-conf:/etc/onlyoffice
-     - onlyoffice-data:/var/www/onlyoffice/Data
-     - onlyoffice-logs:/var/log/onlyoffice
-     - onlyoffice-lib:/var/lib/onlyoffice
-     - onlyoffice-cache:/var/lib/onlyoffice/documentserver/App_Data/cache/files
-     - onlyoffice-samples:/var/www/onlyoffice/documentserver-example/public/files
-     - fonts:/usr/share/fonts/custom
+    - onlyoffice-conf:/etc/onlyoffice
+    - onlyoffice-data:/var/www/onlyoffice/Data
+    - onlyoffice-logs:/var/log/onlyoffice
+    - onlyoffice-lib:/var/lib/onlyoffice
+    - onlyoffice-cache:/var/lib/onlyoffice/documentserver/App_Data/cache/files
+    - onlyoffice-samples:/var/www/onlyoffice/documentserver-example/public/files
+    - fonts:/usr/share/fonts/custom
 services:
   db:
     <<: [ *env ]
     image: "{{cops_seafile_mysql_image}}"
-    container_name: seafile-mysql
+    hostname: seafile-mysql
     volumes:
     - seafile-db:/var/lib/mysql
   setup-services:
@@ -64,7 +65,7 @@ services:
       && while true;do printf "HTTP/1.1 200 OK\n\nstarted"| ( nc -l -p 80 || /bin/true);done
   memcached:
     image: "{{cops_seafile_memcached_image}}"
-    container_name: seafile-memcached
+    hostname: seafile-memcached
     entrypoint: memcached -m 256
   seafile:
     <<: [ *env ]
@@ -111,17 +112,10 @@ services:
 #
   onlyoffice-documentserver-data:
     <<: [ *onlyoffice ]
-    container_name: onlyoffice-documentserver-data
+    hostname: onlyoffice-documentserver-data
     image: onlyoffice/documentserver:latest
     environment:
       - ONLYOFFICE_DATA_CONTAINER=true
-      - POSTGRESQL_SERVER_HOST=onlyoffice-postgresql
-      - POSTGRESQL_SERVER_PORT=5432
-      - POSTGRESQL_SERVER_DB_NAME=onlyoffice
-      - POSTGRESQL_SERVER_USER=onlyoffice
-      - AMQP_SERVER_URL=amqp://guest:guest@onlyoffice-rabbitmq
-      - REDIS_SERVER_HOST=onlyoffice-redis
-      - REDIS_SERVER_PORT=6379
 
   onlyoffice-documentserver:
     <<: [ *onlyoffice ]
@@ -137,25 +131,26 @@ services:
 
   onlyoffice-redis:
     <<: [ *onlyofficebase ]
-    container_name: onlyoffice-redis
+    hostname: onlyoffice-redis
     image: corpusops/redis:latest
     expose:
       - '6379'
 
   onlyoffice-rabbitmq:
     <<: [ *onlyofficebase ]
-    container_name: onlyoffice-rabbitmq
+    hostname: onlyoffice-rabbitmq
     image: corpusops/rabbitmq:3.5
     expose:
       - '5672'
 
   onlyoffice-postgresql:
     <<: [ *onlyofficebase ]
-    container_name: onlyoffice-postgresql
+    hostname: onlyoffice-postgresql
     image: corpusops/postgres:12
     environment:
-      - POSTGRES_DB=onlyoffice
-      - POSTGRES_USER=onlyoffice
+      - POSTGRES_PASSWORD=${ONLYOFFICE_DB_PASSWORD}
+      - POSTGRES_DB=${ONLYOFFICE_DB_NAME}
+      - POSTGRES_USER=${ONLYOFFICE_DB_USER}
     expose:
       - '5432'
     volumes:

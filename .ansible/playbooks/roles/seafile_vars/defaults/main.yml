@@ -28,12 +28,12 @@ cops_seafile_alternate_hostnames: ["{{cops_seafile_hostname}}", "www.{{cops_seaf
 cops_seafile_gateway: "{{ ansible_default_ipv4.address}}"
 cops_seafile_mysql_image: "corpusops/mariadb:10.1"
 cops_seafile_memcached_image: "corpusops/memcached:1.5"
-cops_seafile_image: "corpusops/seafileltd-seafile-mc:7.0.4"
+cops_seafile_image: "corpusops/seafileltd-seafile-mc:7.1.4"
 cops_seafile_time_zone: "Europe/Paris"
 cops_seafile_composename: "{{cops_seafile_name}}"
 cops_seafile_build_args: "--no-cache --pull"
 # backup could be remove in a-while when we have redeployed it everywhere
-cops_seafile_restarted_services_default: "db setup-services"
+cops_seafile_restarted_services_default: "db setup-services backup-db memcached seafile{% if cops_seafile_collabora_hostname%}{% elif cops_seafile_onlyoffice_hostname%}onlyoffice-postgresql onlyoffice-redis onlyoffice-rabbitmq onlyoffice-documentserver-data onlyoffice-documentserver{%endif %}"
 cops_seafile_restarted_services: "{{cops_seafile_restarted_services_default}}"
 cops_seafile_purge_volumes: []
 cops_seafile_sshargs: >-
@@ -144,11 +144,21 @@ cops_seafile_dotenv: |-
   COLLABORA_DOMAINS={{cops_seafile_collabora_domains}}
   COLLABORA_SCHEME={{cops_seafile_collabora_scheme}}
   ONLYOFFICE_HOSTNAME={{cops_seafile_onlyoffice_hostname}}
-  ONLYOFFICE_SCHEME={{cops_seafile_onlyoffice_scheme}}
   COLLABORA_USERNAME={{cops_seafile_collabora_username}}
   COLLABORA_PASSWORD={{cops_seafile_collabora_password}}
   COLLABORA_DONT_GEN_SSL_CERT={{cops_seafile_collabora_dont_gen_ssl_cert}}
   COLLABORA_DICTS={{cops_seafile_collabora_dicts}}
+  {% if cops_seafile_onlyoffice_hostname %}
+  ONLYOFFICE_SCHEME={{cops_seafile_onlyoffice_scheme}}
+  ONLYOFFICE_DB_PASSWORD={{cops_seafile_db_password}}
+  ONLYOFFICE_DB_NAME={{cops_seafile_onlyoffice_db_name}}
+  ONLYOFFICE_DB_USER={{cops_seafile_onlyoffice_db_user}}
+  ENABLE_ONLYOFFICE=True
+  VERIFY_ONLYOFFICE_CERTIFICATE=False
+  ONLYOFFICE_FORCE_SAVE=True
+  {% endif %}
+cops_seafile_onlyoffice_db_name: onlyoffice
+cops_seafile_onlyoffice_db_user: onlyoffice
 cops_seafile_collabora_dont_gen_ssl_cert: "set"
 # cops_seafile_collabora_dont_gen_ssl_cert: "1"
 cops_seafile_collabora_username: admin
@@ -185,6 +195,16 @@ cops_seafile_localpy_extra: ""
 # Normally playbook is in ./.ansible/playbooks
 cops_seafile_group: prod
 cops_seafile_traefik_extra: ""
+cops_seafile_onlyoffice_env: "{{cops_seafile_onlyoffice_env_default}}"
+cops_seafile_onlyoffice_env_default: |-
+  DB_HOST=onlyoffice-postgresql
+  DB_PORT=5432
+  DB_NAME={{cops_seafile_onlyoffice_db_name}}
+  DB_USER={{cops_seafile_onlyoffice_db_user}}
+  DB_PWD={{cops_seafile_db_password}}
+  AMQP_URI=amqp://guest:guest@onlyoffice-rabbitmq
+  REDIS_SERVER_HOST=onlyoffice-redis
+  REDIS_SERVER_PORT=6379
 cops_seafile_code_rsync_opts: [
     "-azv",
     # include deploy projects base code
@@ -192,6 +212,7 @@ cops_seafile_code_rsync_opts: [
     "--exclude", ".ansible",
     "--exclude", "local/*",
     "--exclude", ".env",
+    "--exclude", "onlyoffice.env",
     "--exclude", "docker.env"]
 olddata:
   dvolume: /var/lib/docker/volumes/seafile-seafile-data/_data/seafile

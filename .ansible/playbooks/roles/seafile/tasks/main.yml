@@ -16,6 +16,11 @@
     set_remote_user: "no"
     #update_opts: '--recursive'
 - template:
+    src: "onlyoffice.env"
+    dest: "{{cops_seafile_compose_dir}}/onlyoffice.env"
+    mode: "0640"
+    trim_blocks: false
+- template:
     src: "docker.env"
     dest: "{{cops_seafile_compose_dir}}/docker.env"
     mode: "0640"
