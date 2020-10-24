@@ -79,6 +79,7 @@ services:
       && dockerize -wait http://setup-services -timeout $${MYSQL_STARTUP_TIMEOUT}
       && while read f;do
       echo "Configuring $$f" >&2
+      && sed -i -re "s/(rotate )?[0-9]+/rotate ${NGINX_LOGROTATE_DAYS:-365}\s*$$/g" /etc/logrotate.d/nginx
       && frep $$f:/shared/seafile/conf/$$(basename $$f .frep) --overwrite;done < <(
       find /shared/seafile/conftemplates/ -name *frep)
       && cp /shared/seafile/conf/seahub-crontab /etc/cron.d && chmod 600 /etc/cron.d/* && chown root:root /etc/cron.d/*
