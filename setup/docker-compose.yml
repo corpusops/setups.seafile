@@ -67,7 +67,7 @@ services:
     image: "{{cops_seafile_memcached_image}}"
     hostname: seafile-memcached
     entrypoint: memcached -m 256
-  seafile:
+  seafile: &services_seafile
     <<: [ *env ]
     image: "{{cops_seafile_image}}"
     command:
@@ -86,8 +86,48 @@ services:
       && /sbin/my_init -- /scripts/start.py
     volumes:
     - seafile-data:/shared
+    - seafile-data-data:/shared/seafile/seafile-data/
+    - seahub-avatars:/shared/seafile/seahub-data/avatars
+    - seahub-custom:/shared/seafile/seahub-data/custom
+    - seahub-thumbnail:/shared/seafile/seahub-data/thumbnail
     - ./conf:/shared/seafile/conftemplates
     depends_on: [setup-services]
+  # ad hoc service to launch to start seafile fuse, data will be inside /fuse-data inside the container
+  seafile-fuse:
+    <<: [ *services_seafile ]
+    security_opt: ["seccomp:unconfined"]
+    privileged: true
+    ports: []
+    command:
+    - /bin/bash
+    - '-exc'
+    - >-
+      : \
+      && MYSQL_STARTUP_TIMEOUT=$${MYSQL_STARTUP_TIMEOUT:-45s}
+      && mknod /dev/fuse c 10 229
+      && dockerize -wait http://setup-services -timeout $${MYSQL_STARTUP_TIMEOUT}
+      && while read f;do
+      echo "Configuring $$f" >&2
+      && rm -fv /etc/logrotate.d/* /etc/cron.d/*
+      && frep $$f:/shared/seafile/conf/$$(basename $$f .frep) --overwrite;done < <(
+      find /shared/seafile/conftemplates/ -name *frep)
+      && ( /sbin/my_init -- /scripts/start.py& )
+      && while true;do if !( curl -vvvv localhost 2>&1|grep -qi accounts );then echo "waiting seafile ready";sleep 2;else break;fi;done
+      && cd $$(readlink -f /opt/seafile/seafile-server-latest)
+      && ./seaf-fuse.sh start /seafile-fuse
+      && while true; do sleep 50000;done
+    volumes:
+    - seafile-data:/shared
+    - seafile-data-data:/shared/seafile/seafile-data/
+    - seahub-avatars:/shared/seafile/seahub-data/avatars
+    - seahub-custom:/shared/seafile/seahub-data/custom
+    - seahub-thumbnail:/shared/seafile/seahub-data/thumbnail
+    - ./conf:/shared/seafile/conftemplates
+    - ./local/nobackup/seafile-fuse/conf:/shared/seafile/conf
+    - ./local/nobackup/seafile-fuse/slogs:/shared/seafile/logs
+    - ./local/nobackup/seafile-fuse/logs/nginx:/shared/logs/var-log/nginx
+    - ./local/nobackup/seafile-fuse/fuse:/seafile-fuse
+    - ./local/nobackup/seafile-fuse/data:/host-data
   traefik:
     <<: [ *env ]
     image: corpusops/traefik:alpine
@@ -114,7 +154,7 @@ services:
   onlyoffice-documentserver-data:
     <<: [ *onlyoffice ]
     hostname: onlyoffice-documentserver-data
-    image: onlyoffice/documentserver:latest
+    image: onlyoffice/documentserver:6.1
     environment:
       - ONLYOFFICE_DATA_CONTAINER=true
 
@@ -188,6 +228,11 @@ volumes:
   fonts:
   seafile-db: {name: "${COMPOSE_PROJECT_NAME}-seafile-db", external: false}
   seafile-data: {name: "${COMPOSE_PROJECT_NAME}-seafile-data", external: false}
+  seafile-data-data: {name: "${COMPOSE_PROJECT_NAME}-seafile-data-data", external: false}
+  seahub-avatars: {name: "${COMPOSE_PROJECT_NAME}-seahub-avatars", external: false}
+  seahub-custom: {name: "${COMPOSE_PROJECT_NAME}-seahub-custom", external: false}
+  seahub-thumbnail: {name: "${COMPOSE_PROJECT_NAME}-seahub-thumbnail", external: false}
+
 {% if cops_seafile_onlyoffice_hostname %}
   # onlyoffice
   onlyoffice-pgsql:
