@@ -17,8 +17,8 @@ cops_seafile_compose_dir: "{{cops_seafile_dir}}"
 
 # set to a domain to activate collabora
 cops_seafile_collabora_hostname: ""
-cops_seafile_collabora_domains: "({{
-  cops_seafile_collabora_hostname.replace('.', '\\.')}}|{{
+cops_seafile_collabora_domains: "({% if cops_seafile_collabora_hostname %}{{
+  cops_seafile_collabora_hostname.replace('.', '\\.')}}|{%endif %}{{
   cops_seafile_hostname          .replace('.', '\\.')}})"
 cops_seafile_collabora_scheme: "https"
 # set to a domain to activate onlyoffice

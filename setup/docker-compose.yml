@@ -83,6 +83,8 @@ services:
       && frep $$f:/shared/seafile/conf/$$(basename $$f .frep) --overwrite;done < <(
       find /shared/seafile/conftemplates/ -name *frep)
       && cp /shared/seafile/conf/seahub-crontab /etc/cron.d && chmod 600 /etc/cron.d/* && chown root:root /etc/cron.d/*
+      && sed -i -re 's/while retry < maxretry:/while (retry < maxretry) or os.path.exists("\/keepalive"):/g' /scripts/start.py
+      && cp -rvf /scripts.d/. /scripts
       && /sbin/my_init -- /scripts/start.py
     volumes:
     - seafile-data:/shared
@@ -91,6 +93,7 @@ services:
     - seahub-custom:/shared/seafile/seahub-data/custom
     - seahub-thumbnail:/shared/seafile/seahub-data/thumbnail
     - ./conf:/shared/seafile/conftemplates
+    - ./scripts:/scripts.d
     depends_on: [setup-services]
   # ad hoc service to launch to start seafile fuse, data will be inside /fuse-data inside the container
   seafile-fuse:
@@ -154,7 +157,7 @@ services:
   onlyoffice-documentserver-data:
     <<: [ *onlyoffice ]
     hostname: onlyoffice-documentserver-data
-    image: onlyoffice/documentserver:6.1
+    image: "$ONLYOFFICE_IMAGE"
     environment:
       - ONLYOFFICE_DATA_CONTAINER=true
 

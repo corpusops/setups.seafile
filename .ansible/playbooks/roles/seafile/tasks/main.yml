@@ -5,26 +5,18 @@
     path: "{{item}}"
   with_items:
   - "{{cops_seafile_dir}}"
-- name: Synchronise files inside the environment (deleguation)
-  delegate_to: "localhost"
-  synchronize:
-    compress: false
-    ssh_args: "{{cops_seafile_sshargs}}"
-    src: "{{cops_seafile_code_dir}}"
-    dest: "{{cops_seafile_dir}}/"
-    rsync_opts: "{{cops_seafile_code_rsync_opts}}"
-    set_remote_user: "no"
-    #update_opts: '--recursive'
 - template:
     src: "onlyoffice.env"
     dest: "{{cops_seafile_compose_dir}}/onlyoffice.env"
     mode: "0640"
     trim_blocks: false
+  tags: [seafile_conf, conf]
 - template:
     src: "docker.env"
     dest: "{{cops_seafile_compose_dir}}/docker.env"
     mode: "0640"
     trim_blocks: false
+  tags: [seafile_conf, conf]
 - blockinfile:
     create: true
     path: "{{cops_seafile_compose_dir}}/.env"
@@ -32,6 +24,7 @@
       {{cops_seafile_dotenv}}
       {{cops_seafile_dotenv_extra}}
     marker: "# ANSIBLE MANAGED BLOCK :: deploy commit :: {mark}"
+  tags: [seafile_conf, conf]
 - name: Create directories
   file:
     path: "{{cops_seafile_compose_dir}}/{{ item.path }}"
@@ -39,6 +32,7 @@
     mode: '{{ item.mode }}'
   with_filetree: "{{playbook_dir}}/../../setup/"
   when: item.state == 'directory'
+  tags: [seafile_conf, conf]
 - name: Template files
   template:
     src: '{{ item.src }}'
@@ -46,7 +40,20 @@
     mode: '{{ item.mode }}'
     trim_blocks: false
   with_filetree: "{{playbook_dir}}/../../setup/"
-  when: item.state == 'file'
+  when:
+  - "item.state == 'file'"
+  - "not item.path|regex_search('\\.frep$|traefik.tom|conf.d')"
+  tags: [seafile_conf, conf]
+- name: Copy files
+  copy:
+    src: '{{ item.src }}'
+    dest: "{{cops_seafile_compose_dir}}/{{ item.path }}"
+    mode: '{{ item.mode }}'
+  with_filetree: "{{playbook_dir}}/../../setup/"
+  when:
+  - "item.state == 'file'"
+  - "item.path|regex_search('\\.frep$|traefik.tom|conf.d')"
+  tags: [seafile_conf, conf]
 - include_tasks: docker_login.yml
   with_items: "{{cops_seafile_registries}}"
 - shell: |
@@ -65,5 +72,6 @@
   delay: 10
   when:
   - "cops_seafile_pull|copsf_asbool"
+  tags: [seafile_pull, pull]
 - include_tasks: service.yml
   tags: [seafile_service, service]
