@@ -92,9 +92,12 @@ cops_seafile_mysql_host: db
 cops_seafile_mysql_port: 3306
 cops_seafile_secret_key: wootwoot
 seafile_disable_register: true
+# deactivated for now as there are bugs with certain files corrupting libraries
+cops_seafile_use_go_fileserver: "false"
 
 cops_seafile_dotenv: |-
   APP_TYPE=seafile
+  PROD_HOST={{cops_seafile_prod_host}}
   SEAFILE_DISABLE_REGISTER={{seafile_disable_register and '1' or ''}}
   SECRET_KEY={{cops_seafile_secret_key}}
   COMPOSE_PROJECT_NAME={{cops_seafile_composename}}
@@ -138,6 +141,7 @@ cops_seafile_dotenv: |-
   LDAP_LOGIN_ATTR={{cops_seafile_ldap_login_attr}}
   LDAP_FILTER={{cops_seafile_ldap_filter}}
   {% endif %}
+  seafile_use_go_fileserver={{cops_seafile_use_go_fileserver}}
   CLOUD_MODE=True
   ENABLE_SIGNUP=True
   ACTIVATE_AFTER_REGISTRATION=False
@@ -213,6 +217,7 @@ cops_seafile_localpy_extra: ""
 cops_seafile_group: prod
 cops_seafile_traefik_extra: ""
 cops_seafile_onlyoffice_env: "{{cops_seafile_onlyoffice_env_default}}"
+cops_seafile_prod_host: ""
 cops_seafile_onlyoffice_env_default: |-
   DB_HOST=onlyoffice-postgresql
   DB_PORT=5432
