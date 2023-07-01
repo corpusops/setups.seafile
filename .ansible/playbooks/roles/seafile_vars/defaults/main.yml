@@ -6,8 +6,6 @@ cops_seafile_project_module_name: "{{cops_seafile_name}}"
 cops_seafile_settings_module: "{{cops_seafile_project_module_name}}.settings.instances.{{cops_seafile_deploy_env}}"
 cops_seafile_deploy_env: "dev"
 cops_seafile_docker_image: "{{cops_seafile_name}}"
-cops_seafile_default_docker_tag: "latest"
-cops_seafile_docker_tag: "{{cops_seafile_default_docker_tag}}"
 cops_seafile_tld_domain: example.com
 cops_seafile_gitref: "{{lookup('env', 'CI_COMMIT_TAG_NAME') or lookup('env', 'CI_COMMIT_REF_NAME') or 'latest'}}"
 cops_seafile_default_gitref: master
@@ -17,8 +15,8 @@ cops_seafile_compose_dir: "{{cops_seafile_dir}}"
 
 # set to a domain to activate collabora
 cops_seafile_collabora_hostname: ""
-cops_seafile_collabora_domains: "({{
-  cops_seafile_collabora_hostname.replace('.', '\\.')}}|{{
+cops_seafile_collabora_domains: "({% if cops_seafile_collabora_hostname %}{{
+  cops_seafile_collabora_hostname.replace('.', '\\.')}}|{%endif %}{{
   cops_seafile_hostname          .replace('.', '\\.')}})"
 cops_seafile_collabora_scheme: "https"
 # set to a domain to activate onlyoffice
@@ -29,7 +27,9 @@ cops_seafile_alternate_hostnames: ["{{cops_seafile_hostname}}", "www.{{cops_seaf
 cops_seafile_gateway: "{{ ansible_default_ipv4.address}}"
 cops_seafile_mysql_image: "corpusops/mariadb:10.1"
 cops_seafile_memcached_image: "corpusops/memcached:1.5"
-cops_seafile_image: "corpusops/seafileltd-seafile-mc:8.0.7-1"
+cops_seafile_version: "9.0.2"
+# cops_seafile_version: "8.0.7-1"
+cops_seafile_image: "corpusops/seafileltd-seafile-mc:{{cops_seafile_version}}"
 cops_seafile_time_zone: "Europe/Paris"
 cops_seafile_composename: "{{cops_seafile_name}}"
 cops_seafile_build_args: "--no-cache --pull"
@@ -91,6 +91,7 @@ cops_seafile_seahub_db: seahub
 cops_seafile_mysql_host: db
 cops_seafile_mysql_port: 3306
 cops_seafile_secret_key: wootwoot
+
 cops_seafile_dotenv: |-
   APP_TYPE=seafile
   SECRET_KEY={{cops_seafile_secret_key}}
@@ -101,7 +102,7 @@ cops_seafile_dotenv: |-
   SEAFILE_NAME={{ cops_seafile_name }}
   SEAFILE_IMAGE={{ cops_seafile_docker_image }}
   SEAFILE_DAV={{cops_seafile_dav}}
-  SEAFILE_IMAGE_VERSION={{cops_seafile_docker_tag}}
+  SEAFILE_VERSION_MAJOR={{cops_seafile_version.split('.')[0]}}
   SEAFILE_ADMIN_EMAIL={{cops_seafile_admin_email}}
   SEAFILE_ADMIN_PASSWORD={{cops_seafile_admin_password}}
   SEAFILE_SERVER_HOSTNAME={{cops_seafile_hostname}}

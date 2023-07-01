@@ -6,6 +6,7 @@ SERVICE_URL = https://{{.Env.SEAFILE_SERVER_HOSTNAME}}:443
 
 [Client]
 PORT = 13419
+UNIX_SOCKET = /opt/seafile/ccnet.sock
 
 [Database]
 ENGINE = mysql
@@ -15,10 +16,6 @@ USER = {{.Env.CCNET_USER}}
 PASSWD = {{.Env.MYSQL_PASSWORD}}
 DB = {{.Env.CCNET_DB}}
 CONNECTION_CHARSET = utf8
-
-[Client]
-UNIX_SOCKET = /opt/seafile/ccnet.sock
-
 
 {{ $ldap := .Env.SEAFILE_LDAP | default "0" }}
 {{ if eq $ldap "1" }}

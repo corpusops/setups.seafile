@@ -1,5 +1,8 @@
 [fileserver]
 port = 8082
+{{ if ge ( .Env.SEAFILE_VERSION_MAJOR | default "8" | int ) 9 }}
+use_go_fileserver = true
+{{ end }}
 
 [database]
 type = mysql
