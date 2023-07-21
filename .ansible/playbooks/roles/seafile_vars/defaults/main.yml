@@ -1,5 +1,5 @@
 ---
-coeu_seafile_name: seafileinstance
+cops_seafile_name: seafile
 cops_seafile_dav: "1"
 cops_seafile_code_dir: "{{playbook_dir}}/../.."
 cops_seafile_project_module_name: "{{cops_seafile_name}}"
@@ -9,7 +9,8 @@ cops_seafile_docker_image: "{{cops_seafile_name}}"
 cops_seafile_default_docker_tag: "latest"
 cops_seafile_docker_tag: "{{cops_seafile_default_docker_tag}}"
 cops_seafile_tld_domain: example.com
-cops_seafile_default_gitref: "master"
+cops_seafile_gitref: "{{lookup('env', 'CI_COMMIT_TAG_NAME') or lookup('env', 'CI_COMMIT_REF_NAME') or 'latest'}}"
+cops_seafile_default_gitref: master
 cops_seafile_gitref: "{{cops_seafile_default_gitref}}"
 cops_seafile_dir: "/srv/docker/{{cops_seafile_name}}"
 cops_seafile_compose_dir: "{{cops_seafile_dir}}"
@@ -28,7 +29,7 @@ cops_seafile_alternate_hostnames: ["{{cops_seafile_hostname}}", "www.{{cops_seaf
 cops_seafile_gateway: "{{ ansible_default_ipv4.address}}"
 cops_seafile_mysql_image: "corpusops/mariadb:10.1"
 cops_seafile_memcached_image: "corpusops/memcached:1.5"
-cops_seafile_image: "corpusops/seafileltd-seafile-mc:8.0.5"
+cops_seafile_image: "corpusops/seafileltd-seafile-mc:8.0.7-1"
 cops_seafile_time_zone: "Europe/Paris"
 cops_seafile_composename: "{{cops_seafile_name}}"
 cops_seafile_build_args: "--no-cache --pull"
@@ -36,6 +37,8 @@ cops_seafile_build_args: "--no-cache --pull"
 cops_seafile_restarted_services_default: "db setup-services backup-db memcached seafile{% if cops_seafile_collabora_hostname%}{% elif cops_seafile_onlyoffice_hostname%}onlyoffice-postgresql onlyoffice-redis onlyoffice-rabbitmq onlyoffice-documentserver-data onlyoffice-documentserver{%endif %}"
 cops_seafile_restarted_services: "{{cops_seafile_restarted_services_default}}"
 cops_seafile_purge_volumes: []
+cops_seafile_force_sync_ssh_user: null
+cops_seafile_sync_ssh_user: ""
 cops_seafile_sshargs: >-
   {% set k = hostvars[inventory_hostname].get(
                 'ansible_ssh_private_key_file', '') %}
@@ -48,6 +51,14 @@ cops_seafile_sshargs: >-
   {{ hostvars[inventory_hostname].ansible_ssh_common_args | default('') }}
   {{ hostvars[inventory_hostname].ansible_ssh_extra_args | default('') }}
   {% endif %}
+  {% if((cops_seafile_force_sync_ssh_user) or
+        (cops_seafile_sync_ssh_user and (cops_seafile_force_sync_ssh_user == True))
+    )%}
+  {% set user = cops_seafile_sync_ssh_user or ansible_user or '' %}
+  {% if user %}-l {{user}}{% endif %}
+  {% endif %}
+
+
 cops_seafile_build: false
 cops_seafile_pull: true
 cops_seafile_registries: []
@@ -85,6 +96,7 @@ cops_seafile_dotenv: |-
   SECRET_KEY={{cops_seafile_secret_key}}
   COMPOSE_PROJECT_NAME={{cops_seafile_composename}}
   CONTROL_COMPOSE_FILES={{cops_seafile_compose_files|join(' ')}}
+  COMPOSE_FILE={{cops_seafile_compose_files|join(':')}}
   CI_COMMIT_SHA={{cops_seafile_gitref}}
   SEAFILE_NAME={{ cops_seafile_name }}
   SEAFILE_IMAGE={{ cops_seafile_docker_image }}
@@ -149,6 +161,7 @@ cops_seafile_dotenv: |-
   COLLABORA_DONT_GEN_SSL_CERT={{cops_seafile_collabora_dont_gen_ssl_cert}}
   COLLABORA_DICTS={{cops_seafile_collabora_dicts}}
   {% if cops_seafile_onlyoffice_hostname %}
+  ONLYOFFICE_IMAGE={{cops_seafile_onlyoffice_image}}
   ONLYOFFICE_SCHEME={{cops_seafile_onlyoffice_scheme}}
   ONLYOFFICE_DB_PASSWORD={{cops_seafile_db_password}}
   ONLYOFFICE_DB_NAME={{cops_seafile_onlyoffice_db_name}}
@@ -157,6 +170,7 @@ cops_seafile_dotenv: |-
   VERIFY_ONLYOFFICE_CERTIFICATE=False
   ONLYOFFICE_FORCE_SAVE=True
   {% endif %}
+cops_seafile_onlyoffice_image: "onlyoffice/documentserver:6.4.2.6"
 cops_seafile_onlyoffice_db_name: onlyoffice
 cops_seafile_onlyoffice_db_user: onlyoffice
 cops_seafile_collabora_dont_gen_ssl_cert: "set"
@@ -206,11 +220,14 @@ cops_seafile_onlyoffice_env_default: |-
   REDIS_SERVER_HOST=onlyoffice-redis
   REDIS_SERVER_PORT=6379
 cops_seafile_code_rsync_opts: [
-    "-azv",
+    "-aAzvH",
     # include deploy projects base code
     "--include", "local/*-deploy",
     "--exclude", ".ansible",
+    "--exclude", "setup/",
     "--exclude", "local/*",
+    "--exclude", "nobackup/",
+    "--exclude", ".git",
     "--exclude", ".env",
     "--exclude", "onlyoffice.env",
     "--exclude", "docker.env"]

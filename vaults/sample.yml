@@ -1,0 +1,46 @@
+---
+all: {vars: {seafile_servers: seafile_servers}}
+seafile_servers:
+  children:
+    seafile_prod:
+seafile_baremetals:
+  hosts:
+    ovh-g2-5.mycorp.net:
+seafile_prod:
+  hosts:
+    prod-docker-seafile2.mycorp.net:
+      seafile_sync_path: "/srv/data/seafile"
+      seafile_domain: seafile.mycorp.net
+      # seafile_sync_host: "ovh-r5-2.mycorp.net"
+      seafile_sync_ssh_port: 22
+seafile:
+  children:
+    seafile_servers:
+    seafile_baremetals:
+  vars:
+    cops_seafile_tld_domain: "mycorp.net"
+    cops_seafile_hostname:  "seafile.{{cops_seafile_tld_domain}}"
+    cops_seafile_alternate_hostnames:
+    - "{{cops_seafile_hostname}}"
+    - "seafile2.mycorp.net"
+    cops_seafile_default_from_email: "MakinaCorpus seafile <sysadmin@mycorp.com>"
+    cops_seafile_email_user: "foo@mycorp.com"
+    cops_seafile_email_host: "mail.mycorp.net"
+    cops_seafile_use_tls: "True"
+    cops_seafile_seafile_name: "MakinaCorpusSeafile"
+    cops_seafile_seafile_title: "MakinaCorpus Private Seafile"
+    cops_seafile_onlyoffice_hostname: "onlyoffice.mycorp.net"
+    cops_seafile_secret_key: "+!scx1sqd45f6456*cn%p@i41qs56d4f5q6sd4(#!df21qsd2312qs1d32f132qch7z-(54q65sd4f"
+    cops_seafile_db_password: secret123456789
+    cops_seafile_ccnet_id: 23345679f1337c9529edb2ccac592fbaf27e7ed2
+    cops_seafile_admin_password: "23432143214SQDFQDSF"
+    cops_seafile_admin_email: "admin@seafile.mycorp.net"
+    cops_seafile_ldap: true
+    cops_seafile_ldap_host: "ldap://ldap.mycorp.net"
+    cops_seafile_ldap_base: "ou=People,dc=sample,dc=org"
+    cops_seafile_ldap_user_dn: "uid=seafileadmin,ou=People,dc=sample,dc=org"
+    cops_seafile_ldap_password: "asC1zeezrfdrer"
+    cops_seafile_ldap_login_attr: shortMail
+    cops_seafile_ldap_filter: "memberOf=cn=people,ou=Group,dc=sample,dc=org"
+    cops_seafile_email_password: "xxxxxx-xxxx-xxxx-xxxx-"
+    cops_seafile_collabora_password: yyy

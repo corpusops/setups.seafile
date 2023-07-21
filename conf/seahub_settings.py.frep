@@ -60,8 +60,8 @@ EMAIL_USE_TLS              = {{.Env.EMAIL_USE_TLS}}
 ENABLE_ONLYOFFICE = True
 VERIFY_ONLYOFFICE_CERTIFICATE = False
 ONLYOFFICE_APIJS_URL = '{{$onlyofficescheme}}://{{$onlyoffice}}/web-apps/apps/api/documents/api.js'
-ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
-ONLYOFFICE_EDIT_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
+ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods', 'csv', 'txt')
+ONLYOFFICE_EDIT_FILE_EXTENSION = ("docx", "xlsx", "csv", "pptx", "txt")
 ONLYOFFICE_FORCE_SAVE = True
 {{ end }}
 

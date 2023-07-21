@@ -7,7 +7,7 @@ x-onlyoffice-base: &onlyofficebase
   <<: [ *env ]
 x-onlyoffice: &onlyoffice
   <<: [ *onlyofficebase ]
-  image: "onlyoffice/documentserver:latest"
+  image: "$ONLYOFFICE_IMAGE"
   stdin_open: true
   env_file: [.env, docker.env, onlyoffice.env]
   volumes:
