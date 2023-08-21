@@ -91,9 +91,11 @@ cops_seafile_seahub_db: seahub
 cops_seafile_mysql_host: db
 cops_seafile_mysql_port: 3306
 cops_seafile_secret_key: wootwoot
+seafile_disable_register: true
 
 cops_seafile_dotenv: |-
   APP_TYPE=seafile
+  SEAFILE_DISABLE_REGISTER={{seafile_disable_register and '1' or ''}}
   SECRET_KEY={{cops_seafile_secret_key}}
   COMPOSE_PROJECT_NAME={{cops_seafile_composename}}
   CONTROL_COMPOSE_FILES={{cops_seafile_compose_files|join(' ')}}

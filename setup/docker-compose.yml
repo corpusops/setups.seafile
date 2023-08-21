@@ -83,6 +83,7 @@ services:
       && frep $$f:/shared/seafile/conf/$$(basename $$f .frep) --overwrite;done < <(
       find /shared/seafile/conftemplates/ -name *frep)
       && cp /shared/seafile/conf/seahub-crontab /etc/cron.d && chmod 600 /etc/cron.d/* && chown root:root /etc/cron.d/*
+      && if [ "x$${SEAFILE_DISABLE_REGISTER-}" = "x1" ];then for i in /etc/nginx/sites-enabled/seafile.nginx.conf /shared/nginx/conf/seafile.nginx.conf;do if [ -e $$i ];then sed -i -re "s|(^\s+location /\s+\{)|location ~ /accounts/register/ { return 403;} \1|g" $$i;fi;done;fi
       && sed -i -re 's/while retry < maxretry:/while (retry < maxretry) or os.path.exists("\/keepalive"):/g' /scripts/start.py
       && cp -rvf /scripts.d/. /scripts
       && /sbin/my_init -- /scripts/start.py
