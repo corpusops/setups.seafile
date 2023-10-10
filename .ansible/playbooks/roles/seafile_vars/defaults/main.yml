@@ -27,7 +27,7 @@ cops_seafile_alternate_hostnames: ["{{cops_seafile_hostname}}", "www.{{cops_seaf
 cops_seafile_gateway: "{{ ansible_default_ipv4.address}}"
 cops_seafile_mysql_image: "corpusops/mariadb:10.1"
 cops_seafile_memcached_image: "corpusops/memcached:1.5"
-cops_seafile_version: "9.0.2"
+cops_seafile_version: "9.0.4"
 # cops_seafile_version: "8.0.7-1"
 cops_seafile_image: "corpusops/seafileltd-seafile-mc:{{cops_seafile_version}}"
 cops_seafile_time_zone: "Europe/Paris"
