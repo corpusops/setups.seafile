@@ -1,5 +1,5 @@
 ---
-cops_seafile_version: "9.0.7"
+cops_seafile_version: "9.0.10"
 cops_seafile_name: seafile
 cops_seafile_dav: "1"
 cops_seafile_code_dir: "{{playbook_dir}}/../.."
